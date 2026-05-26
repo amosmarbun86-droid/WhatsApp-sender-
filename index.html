@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WA Sender V4 Pro Final - Amhosrcp AI</title>
- <!-- Tailwind CSS CDN -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WA Sender V4 Pro Final - Amhosrcp AI</title>
+    <!-- Tailwind CSS CDN -->
 <script src="https://cdn.tailwindcss.com"></script>
 
 <!-- Font Awesome CDN -->
@@ -18,112 +18,118 @@
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
 </head>
 <body>
-    <!-- ================= HALAMAN LOGIN ================= -->
-    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4">
-        <div class="glass-card p-8 rounded-3xl w-full max-w-md shadow-2xl">
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <i class="fa-solid fa-lock text-4xl text-green-400"></i>
-                </div>
-                <h2 class="text-2xl font-bold">Secure Access</h2>
-                <p class="text-slate-400 text-sm">Dashboard Logistik Amhosrcp AI</p>
-            </div>
-            <div class="space-y-4">
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Username</label>
-                    <input type="text" id="username" class="input-field w-full p-4 rounded-2xl text-sm" placeholder="Admin">
-                </div>
-                <div>
-                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Password</label>
-                    <input type="password" id="password" class="input-field w-full p-4 rounded-2xl text-sm" placeholder="••••••">
-                </div>
-                <button onclick="handleLogin()" class="btn-primary w-full py-4 rounded-2xl font-bold text-lg shadow-lg mt-2">
-                    LOGIN
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- ================= DASHBOARD UTAMA ================= -->
-    <div id="mainDashboard" class="hidden-section min-h-screen p-4 md:p-8">
-        <div class="max-w-6xl mx-auto">
-            <header class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
-                <div>
-                    <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
-                        WA Sender V4 Pro
-                    </h1>
-                    <p class="text-slate-400 text-xs mt-1">Sistem Pengiriman Pesan & Database Kontak</p>
-                </div>
-                <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500/20 px-6 py-3 rounded-2xl text-[10px] font-bold text-red-400 transition-colors border border-red-500/20">
-                    LOGOUT SYSTEM
-                </button>
-            </header>
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                <!-- Samping: Manajemen Kontak -->
-                <aside class="lg:col-span-4 space-y-6">
-                    <div class="glass-card p-6 rounded-3xl">
-                        <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
-                            <i class="fa-solid fa-users text-green-400"></i> Kelola Kontak
-                        </h2>
-                        
-                        <div class="space-y-4">
-                            <div class="flex gap-2">
-                                <select id="kontakSelect" onchange="isiNomor()" class="input-field flex-grow p-4 rounded-2xl text-xs">
-                                    <option value="">-- Pilih Kontak --</option>
-                                </select>
-                                <button onclick="hapusSatuKontak()" class="btn-danger p-4 rounded-2xl flex items-center justify-center transition-all" title="Hapus Kontak Terpilih">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
-                            <div class="pt-4 border-t border-white/5 space-y-3">
-                                <input type="text" id="namaKontak" placeholder="Nama Baru" class="input-field w-full p-4 rounded-2xl text-xs">
-                                <input type="text" id="nomorKontak" placeholder="628..." class="input-field w-full p-4 rounded-2xl text-xs">
-                                <button onclick="tambahKontak()" class="btn-primary w-full py-4 rounded-2xl font-bold text-xs">
-                                    Simpan Kontak
-                                </button>
-                            </div>
-                            <div class="pt-6 border-t border-white/5">
-                                <input type="file" id="csvFile" accept=".csv" class="hidden">
-                                <div class="grid grid-cols-2 gap-2">
-                                    <button onclick="document.getElementById('csvFile').click()" class="bg-white/5 py-3 rounded-xl text-[9px] font-bold uppercase">Pilih CSV</button>
-                                    <button onclick="importCSV()" class="bg-white/5 py-3 rounded-xl text-[9px] font-bold uppercase">Import</button>
-                                </div>
-                                <button onclick="hapusSemuaKontak()" class="w-full mt-3 py-2 text-[9px] text-red-400/50 hover:text-red-400 uppercase font-bold tracking-tighter">
-                                    Hapus Semua Database
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </aside>
-                <!-- Utama: Komposisi Pesan -->
-                <main class="lg:col-span-8 space-y-6">
-                    <div class="glass-card p-8 rounded-3xl shadow-2xl">
-                        <div class="space-y-5">
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Nomor Tujuan</label>
-                                <input type="text" id="nomor" placeholder="628..." class="input-field w-full p-4 rounded-2xl font-mono text-green-400">
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Pesan (Gunakan {{nama}})</label>
-                                <textarea id="pesan" rows="5" placeholder="Halo {{nama}}..." class="input-field w-full p-5 rounded-2xl resize-none text-sm"></textarea>
-                            </div>
-                            <div>
-                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Media (Gambar/Video)</label>
-                                <input type="file" id="file" accept="image/*,video/*" class="input-field w-full p-3 rounded-2xl text-[10px]">
-                                <img id="previewImg">
-                                <video id="previewVideo" controls></video>
-                            </div>
-                            <div id="status" class="text-center text-[11px] font-medium min-h-[20px]"></div>
-                            <button id="btnKirim" onclick="kirim()" class="btn-primary w-full py-5 rounded-3xl font-black text-lg tracking-widest shadow-2xl shadow-green-500/20">
-                                KIRIM PESAN & LINK
-                            </button>
-                        </div>
-                    </div>
-                </main>
-            </div>
-        </div>
-    </div>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-<script src="script.js"></script>
+
+    <!-- ================= HALAMAN LOGIN ================= -->
+    <div id="loginPage" class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass-card p-8 rounded-3xl w-full max-w-md shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="w-20 h-20 bg-green-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                    <i class="fa-solid fa-lock text-4xl text-green-400"></i>
+                </div>
+                <h2 class="text-2xl font-bold">Secure Access</h2>
+                <p class="text-slate-400 text-sm">Dashboard Logistik Amhosrcp AI</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Username</label>
+                    <input type="text" id="username" class="input-field w-full p-4 rounded-2xl text-sm" placeholder="Admin">
+                </div>
+                <div>
+                    <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1 mb-2 block">Password</label>
+                    <input type="password" id="password" class="input-field w-full p-4 rounded-2xl text-sm" placeholder="••••••">
+                </div>
+                <button onclick="handleLogin()" class="btn-primary w-full py-4 rounded-2xl font-bold text-lg shadow-lg mt-2">
+                    LOGIN
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= DASHBOARD UTAMA ================= -->
+    <div id="mainDashboard" class="hidden-section min-h-screen p-4 md:p-8">
+        <div class="max-w-6xl mx-auto">
+            <header class="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-green-400 to-emerald-500 bg-clip-text text-transparent">
+                        WA Sender V4 Pro
+                    </h1>
+                    <p class="text-slate-400 text-xs mt-1">Sistem Pengiriman Pesan & Database Kontak</p>
+                </div>
+                <button onclick="handleLogout()" class="bg-red-500/10 hover:bg-red-500/20 px-6 py-3 rounded-2xl text-[10px] font-bold text-red-400 transition-colors border border-red-500/20">
+                    LOGOUT SYSTEM
+                </button>
+            </header>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                <!-- Samping: Manajemen Kontak -->
+                <aside class="lg:col-span-4 space-y-6">
+                    <div class="glass-card p-6 rounded-3xl">
+                        <h2 class="text-lg font-bold mb-6 flex items-center gap-2">
+                            <i class="fa-solid fa-users text-green-400"></i> Kelola Kontak
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <div class="flex gap-2">
+                                <select id="kontakSelect" onchange="isiNomor()" class="input-field flex-grow p-4 rounded-2xl text-xs">
+                                    <option value="">-- Pilih Kontak --</option>
+                                </select>
+                                <button onclick="hapusSatuKontak()" class="btn-danger p-4 rounded-2xl flex items-center justify-center transition-all" title="Hapus Kontak Terpilih">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+
+                            <div class="pt-4 border-t border-white/5 space-y-3">
+                                <input type="text" id="namaKontak" placeholder="Nama Baru" class="input-field w-full p-4 rounded-2xl text-xs">
+                                <input type="text" id="nomorKontak" placeholder="628..." class="input-field w-full p-4 rounded-2xl text-xs">
+                                <button onclick="tambahKontak()" class="btn-primary w-full py-4 rounded-2xl font-bold text-xs">
+                                    Simpan Kontak
+                                </button>
+                            </div>
+
+                            <div class="pt-6 border-t border-white/5">
+                                <input type="file" id="csvFile" accept=".csv" class="hidden">
+                                <div class="grid grid-cols-2 gap-2">
+                                    <button onclick="document.getElementById('csvFile').click()" class="bg-white/5 py-3 rounded-xl text-[9px] font-bold uppercase">Pilih CSV</button>
+                                    <button onclick="importCSV()" class="bg-white/5 py-3 rounded-xl text-[9px] font-bold uppercase">Import</button>
+                                </div>
+                                <button onclick="hapusSemuaKontak()" class="w-full mt-3 py-2 text-[9px] text-red-400/50 hover:text-red-400 uppercase font-bold tracking-tighter">
+                                    Hapus Semua Database
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Utama: Komposisi Pesan -->
+                <main class="lg:col-span-8 space-y-6">
+                    <div class="glass-card p-8 rounded-3xl shadow-2xl">
+                        <div class="space-y-5">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Nomor Tujuan</label>
+                                <input type="text" id="nomor" placeholder="628..." class="input-field w-full p-4 rounded-2xl font-mono text-green-400">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Pesan (Gunakan {{nama}})</label>
+                                <textarea id="pesan" rows="5" placeholder="Halo {{nama}}..." class="input-field w-full p-5 rounded-2xl resize-none text-sm"></textarea>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2 block">Media (Gambar/Video)</label>
+                                <input type="file" id="file" accept="image/*,video/*" class="input-field w-full p-3 rounded-2xl text-[10px]">
+                                <img id="previewImg">
+                                <video id="previewVideo" controls></video>
+                            </div>
+                            <div id="status" class="text-center text-[11px] font-medium min-h-[20px]"></div>
+                            <button id="btnKirim" onclick="kirim()" class="btn-primary w-full py-5 rounded-3xl font-black text-lg tracking-widest shadow-2xl shadow-green-500/20">
+                                KIRIM PESAN & LINK
+                            </button>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hubungkan ke file JavaScript Eksternal -->
+    <script src="script.js"></script>
 </body>
 </html>

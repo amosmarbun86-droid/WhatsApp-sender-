@@ -17,7 +17,7 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 const kontakRef = db.ref("kontak");
-const logRef = db.ref("logs"); // Reference baru untuk menyimpan riwayat pesan
+const logRef = db.ref("logs"); // Reference untuk menyimpan data riwayat pesan
 
 // Variabel lokal penyimpan data kontak yang sinkron dengan Firebase
 let kontak = [];
@@ -30,14 +30,16 @@ kontakRef.on("value", (snapshot) => {
     if (data) {
         Object.keys(data).forEach((key) => {
             kontak.push({
-                id: key, // Menyimpan id firebase untuk keperluan penghapusan data spesifik
+                id: key, // Menyimpan id firebase unik agar pemetaan indeks tidak tertukar
                 nama: data[key].nama,
                 nomor: data[key].nomor
             });
         });
     }
-    // Render otomatis menggunakan filter pencarian (jika kolom search terisi)
-    const keyword = document.getElementById("searchKontak") ? document.getElementById("searchKontak").value.toLowerCase().trim() : "";
+    
+    // Sinkronisasi otomatis dengan kolom pencarian jika sedang diisi
+    const searchInput = document.getElementById("searchKontak");
+    const keyword = searchInput ? searchInput.value.toLowerCase().trim() : "";
     if (keyword !== "") {
         filterKontak();
     } else {
@@ -62,7 +64,7 @@ logRef.on("value", (snapshot) => {
     Object.keys(data).forEach(key => {
         logList.push({ id: key, ...data[key] });
     });
-    logList.reverse(); // Data terbaru akan selalu berada di urutan paling atas
+    logList.reverse(); // Data pengiriman terbaru akan selalu muncul paling atas
 
     logList.forEach(log => {
         let tr = document.createElement("tr");
@@ -113,6 +115,7 @@ function handleLogout() {
 }
 
 // ================= CONTACT SYSTEM (FIREBASE INTEGRATED) =================
+// PERBAIKAN: Hanya me-render Nama Kontak saja agar select tidak kepanjangan/merusak layout border hijau Anda
 function renderKontak(kontakFilter = null) {
     const select = document.getElementById("kontakSelect");
     if (!select) return;
@@ -122,10 +125,8 @@ function renderKontak(kontakFilter = null) {
 
     daftarKontak.forEach((k) => {
         let opt = document.createElement("option");
-        // Mencari index asli dari array utama kontak agar fungsionalitas tombol hapus/isi tetap akurat
-        const indexAsli = kontak.findIndex(item => item.id === k.id);
-        opt.value = indexAsli;
-        opt.text = `${k.nama} (${k.nomor})`;
+        opt.value = k.id; 
+        opt.text = k.nama; // Memotong teks nomor telepon dari tampilan visual select
         select.appendChild(opt);
     });
 }
@@ -151,6 +152,7 @@ function tambahKontak() {
     if (!n || !num) return alert("Lengkapi nama dan nomor!");
     if(num.startsWith("0")) num = "62" + num.slice(1);
     if(num.startsWith("8")) num = "62" + num;
+    if(num.startsWith("+")) num = num.slice(1);
 
     kontakRef.push({
         nama: n,
@@ -163,13 +165,28 @@ function tambahKontak() {
     });
 }
 
-function hapusSatuKontak() {
-    let i = document.getElementById("kontakSelect").value;
-    if (i === "") return alert("Pilih kontak yang ingin dihapus!");
+// Mengisi nomor tujuan berdasarkan ID Firebase kontak terpilih secara akurat
+function isiNomor() {
+    const select = document.getElementById("kontakSelect");
+    const firebaseId = select.value;
     
-    let kontakTerpilih = kontak[i];
-    if (confirm(`Hapus kontak ${kontakTerpilih.nama} dari server?`)) {
-        db.ref("kontak/" + kontakTerpilih.id).remove()
+    if (firebaseId !== "") {
+        const kontakTerpilih = kontak.find(k => k.id === firebaseId);
+        if (kontakTerpilih) {
+            document.getElementById("nomor").value = kontakTerpilih.nomor;
+        }
+    } else {
+        document.getElementById("nomor").value = "";
+    }
+}
+
+function hapusSatuKontak() {
+    const firebaseId = document.getElementById("kontakSelect").value;
+    if (firebaseId === "") return alert("Pilih kontak yang ingin dihapus!");
+    
+    const kontakTerpilih = kontak.find(k => k.id === firebaseId);
+    if (kontakTerpilih && confirm(`Hapus kontak ${kontakTerpilih.nama} dari server?`)) {
+        db.ref("kontak/" + firebaseId).remove()
         .then(() => {
             document.getElementById("nomor").value = "";
         })
@@ -191,30 +208,50 @@ function hapusSemuaKontak() {
     }
 }
 
-function isiNomor() {
-    let i = document.getElementById("kontakSelect").value;
-    if (i !== "" && kontak[i]) document.getElementById("nomor").value = kontak[i].nomor;
-}
-
+// PERBAIKAN PENTING: Mendukung multi-kolom CSV (First Name, Last Name, Phone) & membuang tanda '+'
 function importCSV() {
     const f = document.getElementById("csvFile").files[0];
     if (!f) return alert("Pilih file CSV dulu!");
     const r = new FileReader();
     r.onload = function(e) {
-        const rows = e.target.result.split("\n");
-        rows.forEach(row => {
-            let [nama, nomor] = row.split(",");
-            if (nama && nomor) {
-                let val = nomor.trim();
-                if(val.startsWith("0")) val = "62" + val.slice(1);
+        const rows = e.target.result.split(/\r?\n/);
+        let jumlahBerhasil = 0;
+        
+        rows.forEach((row, index) => {
+            if (!row.trim()) return; 
+            
+            let columns = row.split(",");
+            
+            // Lompati baris pertama jika itu adalah nama header kolom
+            if (index === 0 && columns[0].toLowerCase().includes("name")) return;
+            
+            if (columns.length >= 2) {
+                // Kolom terakhir diidentifikasi sebagai nomor telepon
+                let nomorRaw = columns[columns.length - 1].trim();
                 
-                kontakRef.push({
-                    nama: nama.trim(),
-                    nomor: val
-                });
+                // Gabungkan kolom-kolom sebelumnya menjadi nama lengkap utuh
+                let namaRaw = columns.slice(0, columns.length - 1).join(" ").trim();
+                let namaClean = namaRaw.replace(/\s+/g, ' ');
+                let val = nomorRaw;
+                
+                if (namaClean.toLowerCase() === "my number" && val === "") return;
+                if (!val || val === "Phone") return; 
+                
+                // Sinkronisasi standar kode negara 62 dan hilangkan karakter '+'
+                if(val.startsWith("+")) val = val.slice(1);
+                if(val.startsWith("0")) val = "62" + val.slice(1);
+                if(val.startsWith("8")) val = "62" + val;
+                
+                if (namaClean && val) {
+                    kontakRef.push({
+                        nama: namaClean,
+                        nomor: val
+                    });
+                    jumlahBerhasil++;
+                }
             }
         });
-        alert("Import database CSV selesai dikirim ke server cloud.");
+        alert(`Import selesai! Berhasil menambahkan ${jumlahBerhasil} kontak dengan nomor hp yang akurat.`);
     };
     r.readAsText(f);
 }
@@ -248,13 +285,15 @@ async function kirim() {
     bt.disabled = true;
     st.innerText = "⏳ Sedang memproses media...";
 
-    let iK = document.getElementById("kontakSelect").value;
-    let sapa = (iK !== "" && kontak[iK]) ? kontak[iK].nama : "Bapak/Ibu";
+    // Mencari sapaan nama dinamis menggunakan pencocokan ID Firebase unik
+    const firebaseId = document.getElementById("kontakSelect").value;
+    const kontakTerpilih = kontak.find(k => k.id === firebaseId);
+    let sapa = kontakTerpilih ? kontakTerpilih.nama : "Bapak/Ibu";
     let pFinal = ps.replace(/{{nama}}/g, sapa);
 
     let mUrl = "";
     let upOk = false;
-    let statusLog = "❌ Gagal"; // Status default untuk dicatat ke riwayat log
+    let statusLog = "❌ Gagal"; 
 
     try {
         if (fl) {
@@ -306,13 +345,13 @@ async function kirim() {
     } finally {
         bt.disabled = false;
         
-        // Simpan Log Pengiriman ke Firebase secara otomatis
+        // Simpan catatan riwayat aktivitas pesan ke database Firebase secara otomatis
         const sekarang = new Date();
         const opsiWaktu = { 
             day: '2-digit', month: '2-digit', year: 'numeric', 
             hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false 
         };
-        const stringWaktu = sekarang.toLocaleString('id-ID', opsiWaktu).replace(/\//g, '-');
+        const stringWaktu = ClinicalTime = sekarang.toLocaleString('id-ID', opsiWaktu).replace(/\//g, '-');
 
         logRef.push({
             waktu: stringWaktu,
@@ -323,12 +362,11 @@ async function kirim() {
     }
 }
 
-// Fungsi membersihkan seluruh data riwayat pesan di Firebase
 function hapusSemuaLog() {
     if (confirm("Hapus seluruh data riwayat pengiriman di cloud server?")) {
         logRef.remove().catch(err => alert("Gagal membersihkan log: " + err.message));
     }
 }
 
-// Jalankan pengecekan status masuk admin sistem
+// Jalankan sistem verifikasi sesi masuk
 checkAuth();

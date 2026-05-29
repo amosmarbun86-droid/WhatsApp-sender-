@@ -136,9 +136,13 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:h-[450px] rounded-2xl border border-white/5 overflow-hidden">
                     
                     <div class="md:col-span-1 border-r border-white/5 flex flex-col h-[200px] md:h-full bg-black/20 overflow-hidden">
-                        <div class="p-3 border-b border-white/5 text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-white/5 sticky top-0 z-10">
-                            Kotak Masuk Chat
-                        </div>
+                        <div class="p-3 border-b border-white/5 text-[10px] font-bold tracking-wider text-slate-400 uppercase bg-white/5 sticky top-0 z-10 flex justify-between items-center">
+    <span>Kotak Masuk Chat</span>
+    <button onclick="manualRefreshChat()" class="text-slate-400 hover:text-green-400 transition-colors p-1" title="Refresh Chat">
+        <i id="iconRefresh" class="fa-solid fa-rotate"></i>
+    </button>
+</div>
+
                         <div id="chatListContainer" class="divide-y divide-white/5 flex-grow overflow-y-auto">
                             </div>
                     </div>

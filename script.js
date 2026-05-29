@@ -561,5 +561,28 @@ function handleQuickReplyKeyPress(event) {
     }
 }
 
+
+// FUNGSI UTK REFRESH MANUAL DATA CHAT MASUK DARI FIREBASE
+function manualRefreshChat() {
+    const icon = document.getElementById("iconRefresh");
+    if (icon) {
+        icon.classList.add("animate-spin", "text-green-400"); // Beri animasi berputar saat proses loading
+    }
+
+    // Lakukan pembacaan sekali ketuk (once) ke Firebase Log Reference
+    logRef.once("value").then((snapshot) => {
+        // Trigger event listener internal Anda agar merender ulang daftar chat di UI
+        // Karena logRef.on("value") sudah aktif, memicu pembaruan lokal akan otomatis terjadi.
+        if (icon) {
+            setTimeout(() => {
+                icon.classList.remove("animate-spin", "text-green-400");
+            }, 600); // Hentikan animasi putar setelah 0.6 detik
+        }
+    }).catch((err) => {
+        console.error("Gagal refresh data:", err);
+        if (icon) icon.classList.remove("animate-spin", "text-green-400");
+    });
+}
+
 // Jalankan pengecekan status masuk admin sistem
 checkAuth();

@@ -17,4 +17,10 @@
     <preference name="AllowInlineMediaPlayback" value="true" />
     <preference name="BackupWebStorage" value="none" />
 
+    <config-file target="AndroidManifest.xml" parent="/*">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    </config-file>
+    
+
 </widget>
